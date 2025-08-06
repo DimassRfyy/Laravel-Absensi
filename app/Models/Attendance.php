@@ -15,6 +15,7 @@ class Attendance extends Model
      */
     protected $fillable = [
         'user_id',
+        'attendance_session_id',
         'status',
         'scanned_at',
     ];
@@ -25,5 +26,13 @@ class Attendance extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the attendance session that owns the attendance.
+     */
+    public function attendanceSession()
+    {
+        return $this->belongsTo(AttendanceSession::class);
     }
 }

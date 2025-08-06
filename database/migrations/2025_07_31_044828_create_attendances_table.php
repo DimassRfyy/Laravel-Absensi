@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->enum('status', ['hadir', 'izin', 'sakit', 'alpha'])->default('hadir');
             $table->timestamp('scanned_at')->nullable();
+            $table->foreignId('attendance_session_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
