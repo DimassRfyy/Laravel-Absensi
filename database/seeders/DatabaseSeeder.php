@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\AttendanceSession;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -22,5 +23,22 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('12345678'),
             'role' => 'admin',
         ]);
+
+        $sessions = [
+            [
+                'name' => 'Pagi',
+                'start_time' => '07:00:00',
+                'end_time' => '09:00:00',
+            ],
+            [
+                'name' => 'Sore',
+                'start_time' => '13:00:00',
+                'end_time' => '15:00:00',
+            ],
+        ];
+
+        foreach ($sessions as $session) {
+            AttendanceSession::create($session);
+        }
     }
 }
