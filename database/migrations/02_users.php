@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->index()->constrained('tenants')->onDelete('cascade');
             $table->string('name');
             $table->string('email')->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
@@ -21,7 +22,7 @@ return new class extends Migration
             $table->string('major')->nullable();
             $table->string('parent_number')->nullable();
             $table->string('rfid')->unique()->nullable();
-            $table->enum('role', ['student', 'teacher', 'admin'])->default('student');
+            $table->enum('role', ['student', 'teacher', 'admin','super_admin'])->default('student');
             $table->rememberToken();
             $table->timestamps();
         });

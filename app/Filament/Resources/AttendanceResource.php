@@ -2,17 +2,21 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\AttendanceExporter;
 use App\Filament\Resources\AttendanceResource\Pages;
 use App\Filament\Resources\AttendanceResource\RelationManagers;
 use App\Models\Attendance;
+use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceResource extends Resource
 {
@@ -20,6 +24,11 @@ class AttendanceResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
     protected static ?string $navigationGroup = 'Settings';
+
+    public static function canAccess(): bool
+    {
+        return Auth::user()->role === 'admin';
+    }
 
     public static function form(Form $form): Form
     {
@@ -120,6 +129,13 @@ class AttendanceResource extends Resource
                     Tables\Actions\DeleteAction::make(),
                 ])
                 ->icon('heroicon-m-bars-3')
+            ])
+            ->headerActions([
+                ExportAction::make()->exporter(AttendanceExporter::class)
+                    ->label('Export Attendance')
+                    ->icon('heroicon-o-folder-arrow-down')
+                    ->color('primary')
+                    ->hidden(fn () => Auth::user()->role !== 'admin'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

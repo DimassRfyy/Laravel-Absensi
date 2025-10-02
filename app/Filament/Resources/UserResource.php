@@ -2,17 +2,23 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\UserExporter;
+use App\Filament\Imports\UserImporter;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
+use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\ExportAction;
+use Filament\Tables\Actions\ImportAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class UserResource extends Resource
 {
@@ -20,6 +26,11 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $navigationGroup = 'Settings';
+
+    public static function canAccess(): bool
+    {
+        return Auth::user()->role === 'super_admin' || Auth::user()->role === 'admin';
+    }
 
     public static function form(Form $form): Form
     {
@@ -45,11 +56,19 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('rfid')
                     ->maxLength(255),
                 Forms\Components\Select::make('role')
-                    ->options([
+                    ->options(fn () => [
                         'student' => 'Student',
                         'teacher' => 'Teacher',
                         'admin' => 'Admin',
-                    ])
+                    ] + (Auth::user()?->role === 'super_admin' ? ['super_admin' => 'Super Admin'] : []))
+                    ->required(),
+                Forms\Components\Select::make('tenant_id')
+                    ->relationship('tenant', 'name')
+                    ->preload()
+                    ->searchable()
+                    ->default(fn () => Auth::user()?->tenant_id)
+                    ->disabled(fn () => Auth::user()?->role !== 'super_admin')
+                    ->hidden(fn () => Auth::user()?->role !== 'super_admin') // sembunyikan di UI untuk non-super_admin
                     ->required(),
             ]);
     }
@@ -100,6 +119,18 @@ class UserResource extends Resource
                 ])
                 ->icon('heroicon-m-bars-3')
             ])
+            ->headerActions([
+                ExportAction::make()->exporter(UserExporter::class)
+                    ->label('Export User')
+                    ->icon('heroicon-o-folder-arrow-down')
+                    ->color('primary')
+                    ->hidden(fn () => Auth::user()->role !== 'admin'),
+                ImportAction::make()->importer(UserImporter::class)
+                    ->label('Import User')
+                    ->icon('heroicon-o-folder-arrow-down')
+                    ->color('primary')
+                    ->hidden(fn () => Auth::user()->role !== 'admin'),
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
@@ -112,5 +143,18 @@ class UserResource extends Resource
         return [
             'index' => Pages\ManageUsers::route('/'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        // Jika role user adalah super_admin, tampilkan semua data
+        if (Auth::user()?->role === 'super_admin') {
+            return $query;
+        }
+
+        // Jika bukan admin, filter berdasarkan tenant_id
+        return $query->where('tenant_id', Auth::user()->tenant_id);
     }
 }

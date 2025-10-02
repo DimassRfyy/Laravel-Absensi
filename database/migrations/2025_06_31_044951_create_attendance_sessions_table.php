@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('attendance_sessions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->index()->constrained('tenants')->onDelete('cascade');
             $table->string('name'); // e.g. "Pagi", "Sore", "Matematika"
             $table->time('start_time');
             $table->time('end_time');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

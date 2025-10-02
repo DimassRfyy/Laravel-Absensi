@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('tenant_id')->nullable()->index()->constrained('tenants')->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->enum('status', ['hadir', 'izin', 'sakit', 'alpha'])->default('hadir');
             $table->timestamp('scanned_at')->nullable();
