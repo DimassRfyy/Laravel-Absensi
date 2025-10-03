@@ -6,6 +6,7 @@ use App\Models\User;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
+use Illuminate\Support\Facades\Auth;
 
 class UserImporter extends Importer
 {
@@ -38,7 +39,22 @@ class UserImporter extends Importer
         //     'email' => $this->data['email'],
         // ]);
 
-        return new User();
+        $user = new User();
+        
+        // Set tenant_id dari user yang sedang login jika tidak ada di data import
+        if (!isset($this->data['tenant_id']) && Auth::check()) {
+            $user->tenant_id = Auth::user()->tenant_id;
+        }
+
+        return $user;
+    }
+
+    protected function afterSave(): void
+    {
+        // Pastikan tenant_id terisi setelah save jika masih kosong
+        if (empty($this->record->tenant_id) && Auth::check()) {
+            $this->record->update(['tenant_id' => Auth::user()->tenant_id]);
+        }
     }
 
     public static function getCompletedNotificationBody(Import $import): string

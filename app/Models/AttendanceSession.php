@@ -22,8 +22,9 @@ class AttendanceSession extends Model
     }
 
     protected $casts = [
-        'start_time' => 'datetime:H:i:s',
-        'end_time' => 'datetime:H:i:s',
+        'start_time' => 'datetime',
+        'end_time' => 'datetime',
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -35,14 +36,16 @@ class AttendanceSession extends Model
     }
 
     /**
-     * Check if current time is within this session's time range.
+     * Check if current time is within this session's time range and session is active.
      */
     public function isActiveAt($time = null)
     {
         $time = $time ?? now();
         $currentTime = Carbon::parse($time)->format('H:i:s');
         
-        return $currentTime >= $this->start_time && $currentTime <= $this->end_time;
+        return $this->is_active && 
+               $currentTime >= $this->start_time && 
+               $currentTime <= $this->end_time;
     }
 
     /**
@@ -55,6 +58,7 @@ class AttendanceSession extends Model
         
         return static::where('start_time', '<=', $currentTime)
                     ->where('end_time', '>=', $currentTime)
+                    ->where('is_active', true)
                     ->first();
     }
 

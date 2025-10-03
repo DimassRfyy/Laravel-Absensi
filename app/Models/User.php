@@ -65,9 +65,11 @@ class User extends Authenticatable
     protected static function booted(): void
     {
         if (!app()->runningInConsole()) {
-
             static::creating(function ($model) {
-                $model->tenant_id = $model->tenant_id ?? Auth::user()?->tenant_id;
+                // Jika tenant_id belum diset dan ada user yang login
+                if (empty($model->tenant_id) && Auth::check()) {
+                    $model->tenant_id = Auth::user()->tenant_id;
+                }
             });
         }
     }
